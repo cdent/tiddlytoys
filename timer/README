@@ -1,0 +1,62 @@
+This is a hack to use two TiddlyWeb bags as a way to do
+project time tracking. For any project X, two bags are
+created: X-start and X-stop. When 
+
+    twanager starttime X
+
+is run, a tiddler with a title of the current epochtime is 
+created. Similarly when
+
+    twanager stoptime X
+
+is run, a tiddler with a title of the current epochtime is 
+created. In either case a trailing quoted string, a la:
+
+    twanager stoptime X "Made the widget but now need food"
+
+will be set as the text of the created tiddler.
+
+To get report of the amount of hours used thus far
+
+    twanager reporttime X
+
+is run.
+
+The X-* bags will be created if they do not exist. If you
+want to control access to them you will need to edit
+their policies yourself.
+
+The algorithm that counts time tries to be robust in the face
+of starts and stop that are out of proper sequence, but it has
+not been rigorously audited or tested. Thanks to Adrian Hosey
+for help getting it somewhere reasonable.
+
+The idea here is that, using tiddlywebweb, it should be possible
+to have a central hosted server of time data, but quickly and
+easily send data to that server from several different installations.
+
+A directory containing:
+
+* timer.py
+* the tiddlywebweb package
+* and a tiddlywebconfig.py like this:
+
+    config = {
+        'server_store': ['tiddlywebweb.tiddlywebstore', {
+            'server_base': 'http://foo.example.com',
+            'user': 'test', # if you wish to use basic auth
+            'password': 'example',
+            }],
+            'twanager_plugins': ['timer'],
+    }
+                                                                                        }
+Gets things rolling. Further hookups include little shell scripts 
+or aliases that do things like this:
+
+
+    (cd ~/tiddlywebs/timer && \
+        twanager starttime osmosoft "$*" && \
+        twanager reporttime osmosoft)
+
+With the adevent of the new --load parameter for twanager release
+with TiddlyWeb 0.9.55, there are probably ways to streamline things.
