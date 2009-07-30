@@ -61,47 +61,11 @@ def reporttime(args):
         stop_tiddlers = control.filter_tiddlers_from_bag(stop_bag, 'sort=title')
     except NoBagError:
         stop_tiddlers = []
-    total_time = 0
 
-    def _clean(list_a, list_b):
-        new_a = []
-        new_b = []
-        for index, tiddler in enumerate(list_a):
-            try:
-                mate = list_b[index]
-            except IndexError:
-                new_a.append(tiddler)
-                return new_a, new_b
-            try:
-                successor = list_a[index + 1]
-            except IndexError:
-                new_a.append(tiddler)
-                new_b.append(mate)
-                return new_a, new_b
-            if int(successor.title) < int(mate.title):
-                del list_a[index + 1]
-            new_a.append(tiddler)
-            new_b.append(mate)
-        return new_a, new_b
+    starts = [int(tiddler.title) for tiddler in start_tiddlers]
+    stops = [int(tiddler.title) for tiddler in stop_tiddlers]
 
-    starts, stops = _clean(start_tiddlers, stop_tiddlers)
-
-    for index, tiddler in enumerate(starts):
-        start = int(tiddler.title)
-        try:
-            next_stop_tiddler = stops[index]
-            next_stop = int(next_stop_tiddler.title)
-        except IndexError:
-            next_stop = int(time())
-            gap = next_stop - start
-            total_time += gap
-            break
-
-        gap = next_stop - start
-        if gap < 0:
-            print 'skipping a bad gap'
-        else:
-            total_time += gap
+    total_time = count_times(starts, stops)
 
     print 'Total time: %s' % (float(total_time)/(60*60))
 
@@ -135,8 +99,78 @@ def run_tests():
     reporttime(['test3']) # 1
 
 
-
-
 if __name__ == '__main__':
     from tiddlyweb.config import config as global_config
     run_tests()
+
+
+def zip_to_type(starts, stops):
+    tuples = []
+    for start in starts:
+        tuples.append(('start', start))
+    for stop in stops:
+        tuples.append(('stop', stop))
+
+    def key_gen(tuple):
+        return tuple[1]
+
+    tuples = sorted(tuples, key=key_gen)
+
+    return tuples
+
+
+def flush_until_different(type, tuples):
+    removals = []
+    for tuple in tuples:
+        if tuple[0] == type:
+            removals.append(tuple)
+        else:
+            break
+    return removals
+
+
+def de_gap(type, tuples):
+    if type == 'stop':
+        tuples.reverse()
+
+    index = 0
+    removals = []
+
+    for tuple in tuples:
+        if tuple[0] == type:
+            removals.extend(flush_until_different(type, tuples[index + 1:]))
+        index += 1
+
+    for removeme in removals:
+        try:
+            tuples.remove(removeme)
+        except ValueError:
+            pass
+
+    if type == 'stop':
+        tuples.reverse()
+    return tuples
+
+
+def totaller(tuples):
+    total = 0
+    while 1:
+        try:
+            try:
+                start = tuples.pop(0)[1]
+            except IndexError:
+                raise
+            try:
+                stop = tuples.pop(0)[1]
+            except IndexError:
+                stop = time()
+        except IndexError:
+            return total
+        total += (stop - start)
+
+
+def count_times(starts, stops):
+    return totaller(
+        de_gap('stop',
+            de_gap('start',
+                zip_to_type(starts, stops))))
