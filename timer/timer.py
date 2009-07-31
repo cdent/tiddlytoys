@@ -130,9 +130,6 @@ def flush_until_different(type, tuples):
 
 
 def de_gap(type, tuples):
-    if type == 'stop':
-        tuples.reverse()
-
     index = 0
     removals = []
 
@@ -146,9 +143,6 @@ def de_gap(type, tuples):
             tuples.remove(removeme)
         except ValueError:
             pass
-
-    if type == 'stop':
-        tuples.reverse()
     return tuples
 
 
