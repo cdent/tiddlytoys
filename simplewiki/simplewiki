@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+"""
+simplewiki instantiation
+"""
+
+import sys
+import os
+# extend module search path for access to tiddlywebconfig.py
+cwd = os.getcwd()
+sys.path.insert(0, cwd)
+
+from tiddlyweb.config import config
+
+from tiddlywebplugins.instancer import Instance
+
+
+def main(args):
+	args = [unicode(arg, "UTF-8") for arg in args]
+	instance_path = args[1]
+
+	store_structure = {
+		"bags": {
+			"wiki": {
+				"desc": "simplewiki contents",
+				"policy": {
+					"write": ["ANY"], # XXX: ?
+					"create": ["R:ADMIN"],
+					"delete": ["R:ADMIN"],
+					"manage": ["R:ADMIN"],
+					"accept": ["R:ADMIN"],
+					"owner": "administrator" # XXX: meaningless?
+				}
+			},
+		},
+		"recipes": {
+			"wiki": {
+				"desc": "simplewiki",
+				"recipe": [
+					("wiki", "")
+				],
+				"policy": {
+					"write": ["R:ADMIN"],
+					"create": ["R:ADMIN"],
+					"manage": ["R:ADMIN"],
+					"accept": ["R:ADMIN"],
+					"delete": ["R:ADMIN"],
+					"owner": "administrator" # XXX: meaningless?
+				}
+			}
+		}
+	}
+
+
+        try:
+            from pkg_resources import resource_filename
+            front_page = resource_filename('tiddlywebplugins.simplewiki', 'FrontPage.tid')
+            print 'got front page as resource at ', front_page
+        except (ImportError):
+            front_page = os.path.join('tiddlywebplugins', 'FrontPage.tid')
+            print 'got front page as local at ', front_page
+
+	config["instance_tiddlers"] = [
+		("wiki", [front_page])
+	]
+
+	instance_config = {
+		"system_plugins": ["tiddlywebplugins.simplewiki"]
+	}
+
+	instance = Instance(instance_path, config, instance_config)
+	instance.spawn(store_structure)
+	instance.update_store()
+	return True
+
+
+if __name__ == "__main__":
+	status = not main(sys.argv)
+	sys.exit(status)
