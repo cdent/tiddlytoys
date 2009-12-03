@@ -10,7 +10,7 @@ config = {
 from time import time
 
 from tiddlyweb import control
-from tiddlywebplugins import ensure_bag, get_store
+from tiddlywebplugins.utils import ensure_bag, get_store
 from tiddlyweb.manage import make_command
 
 from tiddlyweb.model.bag import Bag
