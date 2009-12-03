@@ -3,7 +3,7 @@ A twanager command for doing simple to do item
 management via Tiddlers.
 """
 
-from tiddlywebplugins import ensure_bag, get_store
+from tiddlywebplugins.utils import ensure_bag, get_store
 from tiddlyweb.manage import make_command
 from tiddlyweb import control
 
