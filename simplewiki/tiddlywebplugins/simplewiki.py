@@ -11,6 +11,7 @@ import urllib
 from tiddlywebplugins.utils import do_html, map_to_tiddler
 from tiddlyweb.web.http import HTTP302, HTTP303, HTTP404
 from tiddlyweb.web.util import server_base_url
+from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.store import NoBagError
@@ -18,11 +19,21 @@ from tiddlyweb import control
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.templates import get_template
 
+def recent_changes(tiddler, environ):
+    store = environ['tiddlyweb.store']
+    recipe = _get_recipe(environ)
+    recipe = store.get(Recipe(recipe))
+    tmpbag = Bag('tmpbag', tmpbag=True)
+    tmpbag.add_tiddlers(control.get_tiddlers_from_recipe(recipe, environ))
+    tiddlers = control.filter_tiddlers_from_bag(tmpbag, 'sort=-modified;limit=30')
+    template = get_template(environ, 'changes.html')
+    environ['tiddlyweb.title'] = 'Recent Changes'
+    return template.generate(tiddlers=tiddlers)
+
 
 def init(config):
     route_base = _route_base(config)
-    config['markdown.wiki_link_base'] = '%s%s/' % (
-            config['server_prefix'], route_base)
+    config['markdown.wiki_link_base'] = ''
 
     config['selector'].add('%s[/]' % route_base, GET=home)
     config['selector'].add('%s/{tiddler_name:alpha}' % route_base, GET=page, POST=edit)
@@ -44,6 +55,9 @@ def home(environ, start_response):
 @do_html()
 def page(environ, start_response):
     tiddler = _determine_tiddler(environ)
+
+    if tiddler.title in SPECIAL_PAGES:
+        return SPECIAL_PAGES[tiddler.title](tiddler, environ)
 
     template = get_template(environ, 'page.html')
     environ['tiddlyweb.title'] = tiddler.title
@@ -113,3 +127,7 @@ def _determine_tiddler(environ):
         tiddler.type = 'text/x-markdown'
 
     return tiddler
+
+SPECIAL_PAGES = {
+        'RecentChanges': recent_changes,
+        }

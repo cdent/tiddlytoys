@@ -1,0 +1,16 @@
+{% include "css.html" %}
+<div class="tiddler">
+    <div class="commandbar">
+        <ul>
+            <li><a href="FrontPage">Home</a></li>
+            <li><a href="RecentChanges">Recent Changes</a></li>
+            {% if not editor %}
+            <li><a href="{{ tiddler.title }};editor">Edit</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <div id="inner">
+        {% block inner %}
+        {% endblock %}
+    </div>
+</div>

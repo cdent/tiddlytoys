@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set editor = True %}
+{% block inner %}
+<ul>
+{% for tiddler in tiddlers %}
+<li><a href="{{ tiddler.title }}">{{ tiddler.title }}</a> {{ tiddler.modified }}</li>
+{% endfor %}
+</ul>
+{% endblock %}
