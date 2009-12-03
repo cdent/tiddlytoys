@@ -1,7 +1,6 @@
 
-# YOU NEED TO EDIT THESE
-AUTHOR = 'Python Person'
-AUTHOR_EMAIL = 'python@example.org'
+AUTHOR = 'Chris Dent'
+AUTHOR_EMAIL = 'cdent@peermore.com'
 NAME = 'tiddlywebplugins.simplewiki'
 DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
 VERSION = '0.1'
@@ -9,8 +8,6 @@ VERSION = '0.1'
 import os
 from setuptools import setup, find_packages
 
-# You should review the below so that it seems correct. install_requires
-# especially.
 setup(
         namespace_packages = ['tiddlywebplugins'],
         name = NAME,
@@ -22,6 +19,8 @@ setup(
         packages = find_packages(exclude='test'),
         author_email = AUTHOR_EMAIL,
         platforms = 'Posix; MacOS X; Windows',
-        # add 'tiddlywebplugins.markdown' when it exists
-        install_requires = ['setuptools', 'tiddlyweb', 'tiddlywebplugins.templates', 'tidlywebplugins.utils'],
+        install_requires = ['tiddlyweb>=0.9.79',
+            'tiddlywebplugins.templates',
+            'tidlywebplugins.utils',
+            'tiddlywebplugins.markdown'],
         )

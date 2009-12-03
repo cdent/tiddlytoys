@@ -16,6 +16,7 @@ from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.store import NoBagError
 from tiddlyweb import control
 from tiddlyweb.wikitext import render_wikitext
+from tiddlywebplugins.templates import get_template
 
 
 def init(config):
@@ -24,11 +25,11 @@ def init(config):
             config['server_prefix'], route_base)
 
     config['selector'].add('%s[/]' % route_base, GET=home)
-    config['selector'].add('%s/{tiddler_name}' % route_base, GET=page, POST=edit)
-    config['selector'].add('%s/{tiddler_name};editor' % route_base, GET=editor, POST=edit)
+    config['selector'].add('%s/{tiddler_name:alpha}' % route_base, GET=page, POST=edit)
+    config['selector'].add('%s/{tiddler_name:alpha};editor' % route_base, GET=editor, POST=edit)
 
     config['wikitext.type_render_map'].update({
-        'text/x-markdown': 'markdown', # replace with plugin when it exists
+        'text/x-markdown': 'tiddlywebplugins.markdown', # replace with plugin when it exists
         })
 
 
@@ -38,10 +39,59 @@ def home(environ, start_response):
             _route_base(config),
             _front_page(config))
     raise HTTP302(location)
-    
+
 
 @do_html()
 def page(environ, start_response):
+    tiddler = _determine_tiddler(environ)
+
+    template = get_template(environ, 'page.html')
+    environ['tiddlyweb.title'] = tiddler.title
+    return template.generate(html=render_wikitext(tiddler, environ),
+            tiddler=tiddler)
+
+
+def edit(environ, start_response):
+    tiddler = _determine_tiddler(environ)
+    tiddler.text = environ['tiddlyweb.query']['text'][0]
+    store = environ['tiddlyweb.store']
+    config = environ['tiddlyweb.config']
+
+    try:
+        recipe = _get_recipe(config)
+        recipe = store.get(Recipe(recipe))
+        bag = control.determine_bag_for_tiddler(recipe, tiddler, environ)
+        tiddler.bag = bag.name
+    except NoBagError, exc:
+        raise HTTP404('No suitable bag to store tiddler %s found, %s' % (tiddler.title, exc))
+
+    store.put(tiddler)
+    location = '%s%s/%s' % (server_base_url(environ),
+            _route_base(config), tiddler.title)
+    raise HTTP303(location)
+
+
+@do_html()
+def editor(environ, start_response):
+    tiddler = _determine_tiddler(environ)
+    template = get_template(environ, 'editor.html')
+    environ['tiddlyweb.title'] = 'Edit ' + tiddler.title
+    return template.generate(tiddler=tiddler)
+
+
+def _front_page(config):
+    return config.get('simplewiki.frontpage', 'FrontPage')
+    
+
+def _route_base(config):
+    return config.get('simplewiki.route_base', '/wiki')
+
+
+def _get_recipe(config):
+    return config.get('simplewiki.recipe', 'wiki')
+
+
+def _determine_tiddler(environ):
     config = environ['tiddlyweb.config']
     store = environ['tiddlyweb.store']
     recipe = Recipe(_get_recipe(config))
@@ -62,27 +112,4 @@ def page(environ, start_response):
         tiddler.text = 'That Page does not yet exist.'
         tiddler.type = 'text/x-markdown'
 
-    html = '<div class="tiddler">' + render_wikitext(tiddler, environ) + '</div>'
-    environ['tiddlyweb.title'] = tiddler.title
-    return [html]
-
-
-def edit(environ, start_response):
-    pass
-
-
-@do_html()
-def editor(environ, start_response):
-    pass
-
-
-def _front_page(config):
-    return config.get('simplewiki.frontpage', 'FrontPage')
-    
-
-def _route_base(config):
-    return config.get('simplewiki.route_base', '/wiki')
-
-
-def _get_recipe(config):
-    return config.get('simplewiki.recipe', 'wiki')
+    return tiddler
