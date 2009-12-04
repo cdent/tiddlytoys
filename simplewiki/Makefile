@@ -12,7 +12,7 @@ clean:
 test:
 	py.test -x test
 
-dist: test
+dist: clean test
 	python setup.py sdist
 
 upload: clean pypi
