@@ -2,6 +2,38 @@
 A simple wiki for TiddlyWeb, entirely server side, that puts a Wiki,
 using markdown syntax plus wiki words, at /wiki.
 
+This plugin, in addition to a quite pleasant wiki (old skool yo!),
+demonstrates some of the available techniques for packaging and
+distributing an application created with TiddlyWeb.
+
+It uses tiddlywebplugins.templates to manage templates which
+may be overriden per instance.
+
+It uses tiddlywebplugins.instancer to manage the creation of
+instances with default structure and content in the store.
+
+Its initial development directory filesystem layout has been
+established by the TiddlyWeb pluginmaker template repostiry:
+http://github.com/tiddlyweb/pluginmaker/
+
+To install and run get pip (and optionally virtualenv) and then:
+
+* pip install tiddlywebplugins.simplewiki
+* simplewiki mywiki
+* cd mywiki
+* twanager server
+* open http://0.0.0.0:8080/wiki
+
+If you want to use simplewiki in an existing TiddlyWeb instance,
+add 'tiddlywebplugins.simplewiki' to 'system_plugins' and:
+
+* twanager bag wiki </dev/null
+* echo "/bags/wiki/tiddlers" | twanager wiki recipe
+* # restart your server, go to /wiki
+
+If you wish to use a different recipe (you can use whatever
+you like) set 'simplewiki.recipe' in tiddlywebconfig.py.
+
 Copyright 2009, Chris Dent <cdent@peermore.com>
 
 Licensed under the same terms as TiddlyWeb itself.

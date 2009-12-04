@@ -18,7 +18,7 @@ dist: clean test
 upload: clean pypi
 
 pypi: test
-	python setup.py dist upload
+	python setup.py sdist upload
 
 peermore:
 	scp -P 8022 dist/tiddlywebplugins*.gz cdent@heavy.peermore.com:public_html/tiddlyweb.peermore.com/dist

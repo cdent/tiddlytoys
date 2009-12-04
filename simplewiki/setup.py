@@ -3,7 +3,7 @@ AUTHOR = 'Chris Dent'
 AUTHOR_EMAIL = 'cdent@peermore.com'
 NAME = 'tiddlywebplugins.simplewiki'
 DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
-VERSION = '0.5'
+VERSION = '0.8'
 
 import os
 from setuptools import setup, find_packages
