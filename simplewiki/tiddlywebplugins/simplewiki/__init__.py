@@ -14,7 +14,7 @@ from tiddlyweb import control
 
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.recipe import Recipe
-from tiddlyweb.model.tiddler import Tiddler
+from tiddlyweb.model.tiddler import Tiddler, current_timestring
 from tiddlyweb.model.policy import ForbiddenError, UserRequiredError
 
 from tiddlyweb.store import NoBagError
@@ -135,6 +135,8 @@ You do not have permission. Copy your edits, <a href="%s">login</a>, then try ag
 """ % challenge_url
         return _editor_display(environ, tiddler, message=message)
 
+    tiddler.modifier = user['name']
+    tiddler.modified = current_timestring()
     store.put(tiddler)
     location = '%s%s/%s' % (server_base_url(environ),
             _route_base(config), tiddler.title)
