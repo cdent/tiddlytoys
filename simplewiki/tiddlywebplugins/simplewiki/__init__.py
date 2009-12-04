@@ -19,18 +19,6 @@ from tiddlyweb import control
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.templates import get_template
 
-def recent_changes(tiddler, environ):
-    store = environ['tiddlyweb.store']
-    recipe = _get_recipe(environ)
-    recipe = store.get(Recipe(recipe))
-    tmpbag = Bag('tmpbag', tmpbag=True)
-    tmpbag.add_tiddlers(control.get_tiddlers_from_recipe(recipe, environ))
-    tiddlers = control.filter_tiddlers_from_bag(tmpbag, 'sort=-modified;limit=30')
-    template = get_template(environ, 'changes.html')
-    environ['tiddlyweb.title'] = 'Recent Changes'
-    return template.generate(tiddlers=tiddlers)
-
-
 def init(config):
     route_base = _route_base(config)
     config['markdown.wiki_link_base'] = ''
@@ -42,6 +30,18 @@ def init(config):
     config['wikitext.type_render_map'].update({
         'text/x-markdown': 'tiddlywebplugins.markdown', # replace with plugin when it exists
         })
+
+
+def recent_changes(tiddler, environ):
+    store = environ['tiddlyweb.store']
+    recipe = _get_recipe(environ)
+    recipe = store.get(Recipe(recipe))
+    tmpbag = Bag('tmpbag', tmpbag=True)
+    tmpbag.add_tiddlers(control.get_tiddlers_from_recipe(recipe, environ))
+    tiddlers = control.filter_tiddlers_from_bag(tmpbag, 'sort=-modified;limit=30')
+    template = get_template(environ, 'changes.html')
+    environ['tiddlyweb.title'] = 'Recent Changes'
+    return template.generate(tiddlers=tiddlers)
 
 
 def home(environ, start_response):
