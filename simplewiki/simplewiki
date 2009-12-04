@@ -18,6 +18,8 @@ from tiddlywebplugins.simplewiki.instance import (
         store_structure, instance_tiddlers, instance_config)
 
 
+# XXX the following block should (probably) be encapsulated within the 
+# tiddlywebplugins.instancer package.
 def main(args):
 	args = [unicode(arg, "UTF-8") for arg in args]
 	instance_path = args[1]

@@ -14,10 +14,12 @@ from tiddlyweb.web.util import server_base_url
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler
+from tiddlyweb.model.policy import ForbiddenError, UserRequiredError
 from tiddlyweb.store import NoBagError
 from tiddlyweb import control
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.templates import get_template
+from tiddlyweb.web.wsgi import _challenge_url
 
 def init(config):
     route_base = _route_base(config)
@@ -65,11 +67,20 @@ def page(environ, start_response):
             tiddler=tiddler)
 
 
+@do_html()
 def edit(environ, start_response):
+    user = environ['tiddlyweb.usersign']
     tiddler = _determine_tiddler(environ)
     tiddler.text = environ['tiddlyweb.query']['text'][0]
     store = environ['tiddlyweb.store']
     config = environ['tiddlyweb.config']
+
+    # if _determine_tiddler loaded the tiddler from the store
+    # then bag will be set and we know that the tiddler is not new
+    tiddler_new = True
+    if tiddler.bag:
+        print 'bag ', tiddler.bag
+        tiddler_new = False
 
     try:
         recipe = _get_recipe(config)
@@ -78,6 +89,19 @@ def edit(environ, start_response):
         tiddler.bag = bag.name
     except NoBagError, exc:
         raise HTTP404('No suitable bag to store tiddler %s found, %s' % (tiddler.title, exc))
+
+    bag = store.get(bag)
+    try:
+        if tiddler_new:
+            bag.policy.allows(user, 'create')
+        else:
+            bag.policy.allows(user, 'write')
+    except (UserRequiredError, ForbiddenError):
+        challenge_url = _challenge_url(environ)
+        message = """
+You do not have permission. Copy your edits, <a href="%s">login</a>, then try again.
+""" % challenge_url
+        return _editor_display(environ, tiddler, message=message)
 
     store.put(tiddler)
     location = '%s%s/%s' % (server_base_url(environ),
@@ -88,9 +112,13 @@ def edit(environ, start_response):
 @do_html()
 def editor(environ, start_response):
     tiddler = _determine_tiddler(environ)
+    return _editor_display(environ, tiddler)
+
+
+def _editor_display(environ, tiddler, message=''):
     template = get_template(environ, 'editor.html')
     environ['tiddlyweb.title'] = 'Edit ' + tiddler.title
-    return template.generate(tiddler=tiddler)
+    return template.generate(tiddler=tiddler, message=message)
 
 
 def _front_page(config):
@@ -106,10 +134,12 @@ def _get_recipe(config):
 
 
 def _determine_tiddler(environ):
+    user = environ['tiddlyweb.usersign']
     config = environ['tiddlyweb.config']
     store = environ['tiddlyweb.store']
     recipe = Recipe(_get_recipe(config))
     recipe = store.get(recipe)
+    recipe.policy.allows(user, 'read')
 
     tiddler_name = environ['wsgiorg.routing_args'][1]['tiddler_name']
     tiddler_name = urllib.unquote(tiddler_name)
@@ -118,6 +148,7 @@ def _determine_tiddler(environ):
 
     try:
         bag = control.determine_tiddler_bag_from_recipe(recipe, tiddler, environ)
+        bag.policy.allows(user, 'read')
         tiddler.bag = bag.name
         tiddler = store.get(tiddler)
     except NoBagError, exc:
