@@ -20,6 +20,9 @@ store_structure = {
         }
 }
 
+instance_config = {
+        "system_plugins": ["tiddlywebplugins.simplewiki"],
+        }
 
 try:
     from pkg_resources import resource_filename
@@ -30,4 +33,3 @@ except (ImportError):
     print 'got front page as local at ', front_page
 
 instance_tiddlers = [("wiki", [front_page])]
-instance_config = { "system_plugins": ["tiddlywebplugins.simplewiki"] }
