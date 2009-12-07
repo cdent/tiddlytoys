@@ -1,13 +1,23 @@
 """
-A simplewiki using markdown syntax, hosted at a /route 
+A simple wiki using markdown syntax, hosted at a /route 
 of your choosing, defaulting to /wiki
 
 Old school wiki and web in action.
+
+You can make a new simplewiki with the simplewiki script:
+
+    simplewiki mywiki
+    cd wiki
+    twanager server
+    open http://0.0.0.0:8080/wiki
+
+(There are, of course, other options for mounting the
+instance).
 """
 
 import urllib
 
-from tiddlywebplugins.utils import do_html, map_to_tiddler
+from tiddlywebplugins.utils import do_html
 from tiddlywebplugins.templates import get_template
 
 from tiddlyweb import control
