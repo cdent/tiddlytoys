@@ -17,7 +17,7 @@ instance).
 
 import urllib
 
-from tiddlywebplugins.utils import do_html, map_to_tiddler
+from tiddlywebplugins.utils import do_html
 from tiddlywebplugins.templates import get_template
 
 from tiddlyweb import control
