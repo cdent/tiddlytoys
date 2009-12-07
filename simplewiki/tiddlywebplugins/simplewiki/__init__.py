@@ -25,6 +25,8 @@ from tiddlyweb.web.wsgi import _challenge_url
 
 from tiddlyweb.wikitext import render_wikitext
 
+__version__ = '1.0'
+
 def init(config):
     """
     Set up the plugin, establishing necessary configuration settings,

@@ -3,10 +3,18 @@ AUTHOR = 'Chris Dent'
 AUTHOR_EMAIL = 'cdent@peermore.com'
 NAME = 'tiddlywebplugins.simplewiki'
 DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
-VERSION = '0.9'
 
 import os
 from setuptools import setup, find_packages
+
+try:
+    import mangler
+    from tiddlywebplugins.simplewiki import __version__ as VERSION
+except ImportError:
+    pass # not in a dev repo
+    VERSION = None
+
+
 
 setup(
         namespace_packages = ['tiddlywebplugins'],
@@ -22,7 +30,7 @@ setup(
         platforms = 'Posix; MacOS X; Windows',
         install_requires = ['tiddlyweb>=0.9.79',
             'tiddlywebplugins.templates',
-            'tiddlywebplugins.instancer',
+            'tiddlywebplugins.instancer>=0.3.2',
             'tiddlywebplugins.utils',
             'tiddlywebplugins.markdown'],
         include_package_data = True,

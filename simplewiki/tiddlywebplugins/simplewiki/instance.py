@@ -30,4 +30,4 @@ try:
 except (ImportError):
     front_page = os.path.join('tiddlywebplugins', 'simplewiki', 'FrontPage.tid')
 
-instance_tiddlers = [("wiki", [front_page])]
+instance_tiddlers = {'wiki': [front_page]}
