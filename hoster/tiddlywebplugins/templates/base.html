@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC
+    "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+    {% block head %}
+        <link rel="stylesheet"
+            href="{{ server_prefix }}/bags/hoster/tiddlers/{{ main_css}}"
+        type="text/css" />
+        {% block title %}
+        <title>{{ title }}</title>
+        {% endblock %}
+    {% endblock %}
+    </head>
+    <body>
+        <div>
+        {% block header %}
+            <div id='header'>
+                <ul>
+                    <li>User: <a
+                        href="{{ userpage.link }}">{{ user.pretty_name }}</a></li>
+                    <li>{{ title }}</li>
+                    <li><a href="{{ help.link }}">{{ help.title }}</a></li>
+                </ul>
+            </div>
+            <div class='message'>
+                {{ message }}
+            </div>
+        {% endblock %}
+        </div>
+        <div id='body'>
+        {% block body %}
+        {% endblock %}
+        </div>
+        <div id='footer'>
+        {% block footer %}
+            FOOT
+        {% endblock %}
+        </div>
+    </body>
+</html>
