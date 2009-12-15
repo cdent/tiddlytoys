@@ -4,6 +4,7 @@ Host customizable TiddlyWikis on TiddlyWeb.
 
 __version__ = '0.1'
 
+from tiddlyweb.model.policy import UserRequiredError, ForbiddenError
 from tiddlyweb.model.user import User
 from tiddlyweb.web.http import HTTP302
 from tiddlyweb.web.util import server_base_url
@@ -21,7 +22,7 @@ def init(config):
 
     if config['selector']:
         replace_handler(config['selector'], '/', dict(GET=front))
-        config['selector'].add('/{userpage}', GET=userpage)
+        config['selector'].add('/{userpage:segment}', GET=userpage)
 
 # XXX this stuff with usernames points out the critical problem
 # with any user system: someday the user might change either their
@@ -36,14 +37,39 @@ def userpage(environ, start_response):
     user = environ['tiddlyweb.usersign']
 
     if userpage == 'home':
-        userpage == user['name']
+        userpage = user['name']
     if userpage == 'GUEST' or 'MEMBER' not in user['roles']:
         location = '%s/' % server_base_url(environ)
         raise HTTP302(location)
 
+    # we want to get a list of recipes and a list of bags
+    # that are readable by the current user and owned by the userpage.
     # this part should probably be a separate plugin, something
     # that provides a sort "my stuff on this server" page.
-    return ['oh hey, yeah, like i am the profile page']
+
+    def _get_stuff(store, entities):
+        kept_entities = []
+        for entity in entities:
+            if hasattr(entity, 'skinny'):
+                entity.skinny = True
+            entity = store.get(entity)
+            if entity.policy.owner == userpage:
+                try:
+                    entity.policy.allows(user, 'read')
+                    kept_entities.append(entity)
+                except (UserRequiredError, ForbiddenError):
+                    pass
+        return kept_entities
+
+    store = environ['tiddlyweb.store']
+    kept_recipes = _get_stuff(store, store.list_recipes())
+    kept_bags = _get_stuff(store, store.list_bags())
+    data = {'bags': kept_bags,
+            'recipes': kept_recipes,
+            'home': userpage,
+            'user': _get_user_object(environ)}
+
+    return _send_template(environ, 'profile.html', data)
 
 
 def _get_user_object(environ):
