@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block body %}
 <div id="profile" style="float: right; width: 50%">
+    <img
+    src="http://www.gravatar.com/avatar/{{ email_md5 }}.png" alt="gravatar">
     {{ profile }}
     {% if home == user.name %}
-    <p><form action="{{ server_prefix }}/formeditor"><input type="submit" name="edit" value="edit me"/></form></p>
+    <p><form action="{{ server_prefix }}/formeditor"><input type="submit"
+        name="edit" value="edit profile"/></form></p>
+    <p><form action="{{ server_prefix }}/addemail" method="POST"><input name="email"
+        size="40" value="{{ email }}"/><input type="submit" value="set email"
+        /></form></p>
     {% endif %}
 </div>
 {% if home == user.name %}

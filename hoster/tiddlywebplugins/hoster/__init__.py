@@ -4,6 +4,11 @@ Host customizable TiddlyWikis on TiddlyWeb.
 
 __version__ = '0.2'
 
+import Cookie
+import time
+
+from hashlib import md5
+
 from tiddlyweb.model.policy import UserRequiredError, ForbiddenError
 from tiddlyweb.model.user import User
 from tiddlyweb.model.bag import Bag
@@ -28,7 +33,34 @@ def init(config):
         replace_handler(config['selector'], '/', dict(GET=front))
         config['selector'].add('/help', GET=help)
         config['selector'].add('/formeditor', GET=get_profiler, POST=post_profile)
+        config['selector'].add('/addemail', POST=add_email)
+        config['selector'].add('/logout', POST=logout)
         config['selector'].add('/{userpage:segment}', GET=userpage)
+
+
+def logout(environ, start_response):
+    cookie = Cookie.SimpleCookie()
+    path = environ['tiddlyweb.config']['server_prefix']
+    cookie['tiddlyweb_user'] = ''
+    cookie['tiddlyweb_user']['path'] = '%s/' % path
+    cookie['tiddlyweb_user']['expires'] = '%s' % (time.ctime(time.time()-6000))
+    uri = server_base_url(environ)
+    start_response('303 See Other', [
+        ('Set-Cookie', cookie.output(header='')),
+        ('Location', uri),
+        ])
+    return uri
+
+def add_email(environ, start_response):
+    user = _get_user_object(environ)
+    store = environ['tiddlyweb.store']
+    _ensure_user_bag(store, user['name'])
+    tiddler = Tiddler('email', user['name'])
+    email = environ['tiddlyweb.query'].get('email', [''])[0]
+    tiddler.text = email
+    store.put(tiddler)
+    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
+
 
 @do_html()
 def help(environ, start_response):
@@ -72,10 +104,14 @@ def userpage(environ, start_response):
     profile_html = render_wikitext(profile_tiddler, environ)
     kept_recipes = _get_stuff(store, store.list_recipes(), user, userpage)
     kept_bags = _get_stuff(store, store.list_bags(), user, userpage)
+    email = _get_email_tiddler(store, userpage)
+    email_md5 = md5(email).hexdigest()
     data = {'bags': kept_bags,
             'recipes': kept_recipes,
             'home': userpage,
             'profile': profile_html,
+            'email': email,
+            'email_md5': email_md5,
             'user': _get_user_object(environ)}
 
     return _send_template(environ, 'profile.html', data)
@@ -91,6 +127,15 @@ def _get_profile(store, user, userpage):
         else:
             tiddler.text = '!!!No profile yet!\n'
     return tiddler
+
+
+def _get_email_tiddler(store, userpage):
+    try:
+        tiddler = Tiddler('email', userpage)
+        tiddler = store.get(tiddler)
+    except NoTiddlerError:
+        tiddler.text = ''
+    return tiddler.text
 
 
 def _ensure_user_bag(store, userpage):
