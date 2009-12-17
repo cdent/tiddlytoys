@@ -157,10 +157,9 @@ def _get_email_tiddler(store, userpage):
 
 def _ensure_user_bag(store, userpage):
     policy = {}
-    policy['read'] = ['R:MEMBER']
     policy['manage'] = ['R:ADMIN']
 
-    for constraint in ['write', 'create', 'delete']:
+    for constraint in ['read', 'write', 'create', 'delete']:
         policy[constraint] = [userpage]
 
     policy['owner'] = userpage
