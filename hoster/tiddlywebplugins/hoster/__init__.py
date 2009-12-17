@@ -12,6 +12,7 @@ from hashlib import md5
 from tiddlyweb.model.policy import UserRequiredError, ForbiddenError
 from tiddlyweb.model.user import User
 from tiddlyweb.model.bag import Bag
+from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.store import NoBagError, NoTiddlerError, NoUserError
 from tiddlyweb.web.http import HTTP302, HTTP404
@@ -77,10 +78,26 @@ def front(environ, start_response):
     return _send_template(environ, 'home.html', data)
 
 
+def first_time_check(environ, user):
+    username = user['name']
+    store = environ['tiddlyweb.store']
+    try:
+        bag = Bag(username)
+        store.get(bag)
+    except NoBagError:
+        _ensure_protected_bag(store, username)
+        _ensure_private_bag(store, username)
+        _ensure_protected_recipe(store, username)
+        _ensure_private_recipe(store, username)
+        _ensure_user_bag(store, username)
+
+
 @do_html()
 def userpage(environ, start_response):
     userpage = environ['wsgiorg.routing_args'][1]['userpage']
     user = environ['tiddlyweb.usersign']
+
+    first_time_check(environ, user)
 
     if userpage == 'home':
         userpage = user['name']
@@ -105,7 +122,7 @@ def userpage(environ, start_response):
     kept_recipes = _get_stuff(store, store.list_recipes(), user, userpage)
     kept_bags = _get_stuff(store, store.list_bags(), user, userpage)
     email = _get_email_tiddler(store, userpage)
-    email_md5 = md5(email).hexdigest()
+    email_md5 = md5(email.lower()).hexdigest()
     data = {'bags': kept_bags,
             'recipes': kept_recipes,
             'home': userpage,
@@ -141,11 +158,59 @@ def _get_email_tiddler(store, userpage):
 def _ensure_user_bag(store, userpage):
     policy = {}
     policy['read'] = ['R:MEMBER']
+    policy['manage'] = ['R:ADMIN']
 
-    for constraint in ['write', 'create', 'delete', 'manage']:
+    for constraint in ['write', 'create', 'delete']:
         policy[constraint] = [userpage]
 
-    ensure_bag(userpage, store, policy, owner=userpage)
+    policy['owner'] = userpage
+
+    ensure_bag(userpage, store, policy)
+
+
+def _ensure_protected_bag(store, username):
+    policy = {}
+    policy['read'] = ['R:MEMBER']
+    for constraint in ['write', 'create', 'delete', 'manage']:
+        policy[constraint] = [username]
+    policy['owner'] = username
+    ensure_bag('%s-protected' % username, store, policy)
+
+
+def _ensure_private_bag(store, username):
+    policy = {}
+    for constraint in ['read', 'write', 'create', 'delete', 'manage']:
+        policy[constraint] = [username]
+    policy['owner'] = username
+    ensure_bag('%s-private' % username, store, policy)
+
+
+def _ensure_protected_recipe(store, username):
+    name = '%s-protected' % username
+    recipe = Recipe(name)
+    recipe.policy.read = ['R:MEMBER']
+    recipe.policy.manage = [username]
+    recipe.policy.owner = username
+    recipe.set_recipe([
+        ('system', ''),
+        (name, ''),
+        ])
+    store.put(recipe)
+
+
+def _ensure_private_recipe(store, username):
+    name = '%s-private' % username
+    pname = '%s-protected' % username
+    recipe = Recipe(name)
+    recipe.policy.read = [username]
+    recipe.policy.manage = [username]
+    recipe.policy.owner = username
+    recipe.set_recipe([
+        ('system', ''),
+        (pname, ''),
+        (name, ''),
+        ])
+    store.put(recipe)
 
 
 def _get_stuff(store, entities, user, owner):

@@ -20,13 +20,13 @@
 <h1>Recipes</h1>
 <ul>
 {% for recipe in recipes %}
-<li>{{ recipe.name }}</li>
+<li><a href="{{ server_prefix }}/recipes/{{ recipe.name }}/tiddlers.wiki">{{ recipe.name }}</a></li>
 {% endfor %}
 </ul>
 <h1>Bags</h1>
 <ul>
 {% for bag in bags %}
-<li>{{ bag.name }}</li>
+<li><a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers">{{ bag.name }}</a></li>
 {% endfor %}
 </ul>
 {% endblock %}

@@ -15,7 +15,7 @@ border-bottom: thin solid black;
 margin-bottom: 1em;
 }
 
-#header ul li {
+#header ul li, form {
 margin-left: 0;
 padding-left: 0;
 padding-right: 2em;
