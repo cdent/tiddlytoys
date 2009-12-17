@@ -9,17 +9,16 @@ clean:
 	rm -r build || true
 	rm -r *.egg-info || true
 
+contents:
+	./cacher
+
 test:
 	py.test -x test
 
-dist: clean test
+dist: clean contents test
 	python setup.py sdist
 
 upload: clean pypi
 
-pypi: test
+pypi: contents test
 	python setup.py sdist upload
-
-peermore:
-	scp -P 8022 dist/tiddlywebplugins*.gz cdent@heavy.peermore.com:public_html/tiddlyweb.peermore.com/dist
-

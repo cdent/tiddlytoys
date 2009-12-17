@@ -2,6 +2,15 @@
 Data structures used for creating a new instance of
 simplewiki.
 """
+
+from tiddlywebplugins.instancer.util import get_tiddler_locations
+
+store_contents = {
+        'wiki': [
+            'file:basecontent/FrontPage.tid',
+            ]
+        }
+
 store_structure = {
         "bags": {
                 "wiki": {
@@ -20,14 +29,9 @@ store_structure = {
         }
 }
 
+
 instance_config = {
         "system_plugins": ["tiddlywebplugins.simplewiki"],
         }
 
-try:
-    from pkg_resources import resource_filename
-    front_page = resource_filename('tiddlywebplugins.simplewiki', 'FrontPage.tid')
-except (ImportError):
-    front_page = os.path.join('tiddlywebplugins', 'simplewiki', 'FrontPage.tid')
-
-instance_tiddlers = {'wiki': [front_page]}
+instance_tiddlers = get_tiddler_locations(store_contents, 'tiddlywebplugins.simplewiki')

@@ -11,27 +11,18 @@ cwd = os.getcwd()
 sys.path.insert(0, cwd)
 
 from tiddlyweb.config import config
-
-from tiddlywebplugins.instancer import Instance
-
-from tiddlywebplugins.simplewiki.instance import (
-        store_structure, instance_tiddlers, instance_config)
+from tiddlywebplugins.instancer.util import spawn
+from tiddlywebplugins.simplewiki import instance
 
 
-# XXX the following block should (probably) be encapsulated within the 
-# tiddlywebplugins.instancer package.
 def main(args):
-	args = [unicode(arg, "UTF-8") for arg in args]
-	instance_path = args[1]
-
-        config['instance_tiddlers'] = instance_tiddlers
-
-	instance = Instance(instance_path, config, instance_config)
-	instance.spawn(store_structure)
-	instance.update_store()
-	return True
+    args = [unicode(arg, "UTF-8") for arg in args]
+    instance_path = args[1]
+    config['instance_tiddlers'] = instance.instance_tiddlers
+    instance.spawn(instance_path, config, instance)
+    return True
 
 
 if __name__ == "__main__":
-	status = not main(sys.argv)
-	sys.exit(status)
+    status = not main(sys.argv)
+    sys.exit(status)

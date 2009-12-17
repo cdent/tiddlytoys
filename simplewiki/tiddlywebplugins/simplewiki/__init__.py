@@ -15,6 +15,8 @@ You can make a new simplewiki with the simplewiki script:
 instance).
 """
 
+__version__ = '1.0.1'
+
 import urllib
 
 from tiddlywebplugins.utils import do_html

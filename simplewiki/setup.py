@@ -7,13 +7,7 @@ DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
 import os
 from setuptools import setup, find_packages
 
-try:
-    import mangler
-    from tiddlywebplugins.simplewiki import __version__ as VERSION
-except ImportError:
-    pass # not in a dev repo
-    VERSION = None
-
+VERSION = '1.0.1'
 
 
 setup(
