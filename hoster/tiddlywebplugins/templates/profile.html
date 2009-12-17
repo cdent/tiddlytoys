@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block body %}
+<div id="profile" style="float: right; width: 50%">
+    {{ profile }}
+    {% if home == user.name %}
+    <p><form action="#"><input type="button" name="edit" value="edit me"/></form></p>
+    {% endif %}
+</div>
 {% if home == user.name %}
 <p>Here's your stuff {{ user.pretty_name }}.</p>
 {% else %}

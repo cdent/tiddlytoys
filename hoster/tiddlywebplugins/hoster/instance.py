@@ -24,7 +24,8 @@ store_structure = {
         }
 
 instance_config = {
-        "system_plugins": ["tiddlywebplugins.hoster"],
+        'system_plugins': ['tiddlywebplugins.hoster'],
+        'auth_systems': ['openid'],
         }
 
 instance_tiddlers = get_tiddler_locations(store_contents, 'tiddlywebplugins.hoster')
