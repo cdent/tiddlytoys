@@ -11,10 +11,13 @@ clean: cleanlinks
 	rm tiddlyweb.log || true
 	rm -r store || true
 
+contents:
+	./cacher
+
 test:
 	py.test -x test
 
-dist: test
+dist: test contents
 	python setup.py sdist
 
 upload: clean pypi

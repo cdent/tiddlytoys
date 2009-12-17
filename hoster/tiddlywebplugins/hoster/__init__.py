@@ -2,7 +2,7 @@
 Host customizable TiddlyWikis on TiddlyWeb.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 from tiddlyweb.model.policy import UserRequiredError, ForbiddenError
 from tiddlyweb.model.user import User
