@@ -27,6 +27,7 @@ def init(config):
     if config['selector']:
         replace_handler(config['selector'], '/', dict(GET=front))
         config['selector'].add('/help', GET=help)
+        config['selector'].add('/formeditor', GET=get_profiler, POST=post_profile)
         config['selector'].add('/{userpage:segment}', GET=userpage)
 
 @do_html()
@@ -166,3 +167,52 @@ def _send_template(environ, template_name, template_data):
             }
     template_defaults.update(template_data)
     return template.generate(template_defaults)
+
+
+@do_html()
+def get_profiler(environ, start_response):
+    usersign = environ['tiddlyweb.usersign']
+    store = environ['tiddlyweb.store']
+    username = usersign['name']
+
+    if not 'MEMBER' in usersign['roles']:
+        raise HTTP404('bad edit')
+
+    tiddler = _get_profile(store, usersign, username)
+    bag = Bag(tiddler.bag)
+    bag = store.get(bag)
+    bag.policy.allows(usersign, 'write')
+
+    return_url = '%s/home' % server_base_url(environ)
+
+    user = _get_user_object(environ)
+    data = {}
+    data['user'] = user
+    data['tiddler'] = tiddler
+    data['return_url'] = return_url
+    return _send_template(environ, 'profile_edit.html', data)
+
+
+def post_profile(environ, start_response):
+    usersign = environ['tiddlyweb.usersign']
+    text = environ['tiddlyweb.query'].get('text', [''])[0]
+    title = environ['tiddlyweb.query'].get('title', [''])[0]
+    bag = environ['tiddlyweb.query'].get('bag', [''])[0]
+    return_url = environ['tiddlyweb.query'].get('return_url', ['/home'])[0]
+
+    store = environ['tiddlyweb.store']
+
+    tiddler = Tiddler(title, bag)
+    tiddler.text = text
+    tiddler.modifier = usersign['name']
+    bag = Bag(bag)
+    try:
+        bag = store.get(bag)
+    except NoBagError, exc:
+        raise HTTP404('tiddler %s not found: %s' % (tiddler.title, exc))
+
+    bag.policy.allows(usersign, 'write')
+
+    store.put(tiddler)
+
+    raise HTTP302(return_url)

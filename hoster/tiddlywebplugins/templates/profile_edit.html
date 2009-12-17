@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block body %}
+<form method="POST">
+<textarea name="text" rows="24" cols="80">
+{{ tiddler.text }}
+</textarea>
+<input type="hidden" name="title" value="{{ tiddler.title }}">
+<input type="hidden" name="bag" value="{{ tiddler.bag }}">
+<input type="hidden" name="return_url" value="{{ return_url }}">
+<input type="submit">
+<a href="{{ return_url }}">Cancel</a>
+</form>
+{% endblock %}
