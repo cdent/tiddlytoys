@@ -10,6 +10,7 @@ clean: cleanlinks
 	rm -r *.egg-info || true
 	rm tiddlyweb.log || true
 	rm -r store || true
+	rm -r tiddlywebplugins/hoster/resources || true
 
 contents:
 	./cacher
