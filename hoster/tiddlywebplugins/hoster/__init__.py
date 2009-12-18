@@ -9,6 +9,7 @@ import time
 
 from hashlib import md5
 
+from tiddlyweb import __version__ as VERSION
 from tiddlyweb.model.policy import UserRequiredError, ForbiddenError
 from tiddlyweb.model.user import User
 from tiddlyweb.model.bag import Bag
@@ -306,6 +307,7 @@ def _send_template(environ, template_name, template_data=None):
     user = _get_user_object(environ)
     template_defaults = {
             #'message': 'test me you are a message',
+            'version': VERSION,
             'user': user,
             'member_role': 'MEMBER',
             'title': 'TiddlyHoster',
