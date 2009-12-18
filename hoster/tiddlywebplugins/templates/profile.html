@@ -14,7 +14,7 @@
     {% endif %}
 </div>
 <div id="friends" class="following">
-{% if home != user.name and user.name != "GUEST" and not home in user_friends %}
+{% if home != user.name and user.name != "GUEST" and home not in user_friends %}
 <p><form action="{{ server_prefix }}/follow" method="POST">
     <input type="submit" value="follow" />
     <input type="hidden" name="name" value="{{ home }}" />
@@ -26,8 +26,8 @@ Following:
 <li><a href="{{ server_prefix }}/{{ name }}" title="{{ name }}">
     <img height="24" src="http://www.gravatar.com/avatar/{{ md5 }}.png"
     alt="{{ name }}" />{{ name }}</a></li>
-</ul>
 {% endfor %}
+</ul>
 </div>
 {% if home == user.name %}
 <p>Here's your stuff {{ user.pretty_name }}.</p>

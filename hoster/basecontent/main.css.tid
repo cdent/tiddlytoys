@@ -22,15 +22,14 @@ padding-left: 1em;
 border-left: thin solid black;
 }
 
-#friends {
+.following {
 float: right;
 width: 10%;
 }
 
 #friends ul li {
 list-style: none;
-maring-left: 0;
-text-indent: -1em;
+text-indent: -2em;
 }
 
 #header ul li, form {
