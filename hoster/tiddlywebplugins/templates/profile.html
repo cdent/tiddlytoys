@@ -28,6 +28,16 @@ Following:
     alt="{{ name }}" />{{ name }}</a></li>
 {% endfor %}
 </ul>
+Favorites:
+<ul>
+{% for bag in favorites %}
+<li><a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers">{{ bag.name }}</a>
+<a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers.atom"
+    title="feed"><img
+    src="http://www.mozilla.org/images/feed-icon-14x14.png"
+    alt="feed" /></a></li>
+</li>
+{% endfor %}
 </div>
 {% if home == user.name %}
 <p>Here's your stuff {{ user.pretty_name }}.</p>

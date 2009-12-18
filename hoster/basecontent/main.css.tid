@@ -25,6 +25,7 @@ border-left: thin solid black;
 .following {
 float: right;
 width: 10%;
+font-size: 75%;
 }
 
 a img {
@@ -51,6 +52,8 @@ display: inline;
 
 #body {
     overflow: auto;
+    padding-top: 1em;
+    padding-bottom: 1em;
     width: 100%
 }
 

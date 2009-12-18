@@ -24,6 +24,7 @@ from tiddlywebplugins.templates import get_template
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.hoster.instance import instance_tiddlers
 from tiddlyweb.web.extractors.simple_cookie import Extractor as SimpleExtractor
+from tiddlyweb.serializations.html import Serialization as HTMLSerialization
 
 
 def init(config):
@@ -45,12 +46,18 @@ def init(config):
         config['selector'].add('/follow', POST=add_friend)
         config['selector'].add('/logout', POST=logout)
         config['selector'].add('/members', GET=members)
+        config['selector'].add('/bagfavor', POST=bag_favor)
+        # THE FOLLOWING MUST COME LAST
         config['selector'].add('/{userpage:segment}', GET=userpage)
+
         presenter_index = config['server_response_filters'].index(HTMLPresenter)
         config['server_response_filters'][presenter_index] = PrettyPresenter
         simple_cookie_index = config['extractors'].index('simple_cookie')
         config['extractors'][simple_cookie_index] = 'tiddlywebplugins.hoster'
 
+        new_serializer = ['tiddlywebplugins.hoster', 'text/html; charset=UTF-8']
+        config['serializers']['text/html'] = new_serializer
+        config['serializers']['default'] = new_serializer
 
 @do_html()
 def members(environ, start_response):
@@ -83,6 +90,25 @@ def logout(environ, start_response):
         ('Location', uri),
         ])
     return uri
+
+
+def bag_favor(environ, start_response):
+    user = _get_user_object(environ)
+    store = environ['tiddlyweb.store']
+    _ensure_user_bag(store, user['name'])
+    new_favorite = environ['tiddlyweb.query'].get('bag', None)[0]
+    tiddler = Tiddler('favorites', user['name'])
+    try:
+        store.get(tiddler)
+        favorites = tiddler.text.splitlines()
+    except NoTiddlerError:
+        favorites = []
+    # XXX I suppose a set would be okay here.
+    if new_favorite and new_favorite not in favorites:
+        favorites.append(new_favorite)
+    tiddler.text = '\n'.join(favorites)
+    store.put(tiddler)
+    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
 
 
 def add_friend(environ, start_response):
@@ -171,12 +197,15 @@ def userpage(environ, start_response):
     profile_html = render_wikitext(profile_tiddler, environ)
     kept_recipes = _get_stuff(store, store.list_recipes(), user, userpage)
     kept_bags = _get_stuff(store, store.list_bags(), user, userpage)
+    kept_favorites = _get_stuff(store, _get_favorited_bags(store, userpage),
+            user, userpage)
     email = _get_email_tiddler(store, userpage)
     email_md5 = md5(email.lower()).hexdigest()
     data = {'bags': kept_bags,
             'user_friends': user_friend_names,
             'friends': friends,
             'recipes': kept_recipes,
+            'favorites': kept_favorites,
             'home': userpage,
             'profile': profile_html,
             'email': email,
@@ -184,6 +213,22 @@ def userpage(environ, start_response):
             'user': _get_user_object(environ)}
 
     return _send_template(environ, 'profile.html', data)
+
+
+def _get_favorited_bags(store, username):
+    tiddler = Tiddler('favorites', username)
+    try:
+        store.get(tiddler)
+        favorites = tiddler.text.splitlines()
+    except NoTiddlerError:
+        favorites = []
+    bags = []
+    for favorite in favorites:
+        try:
+            bags.append(store.get(Bag(favorite)))
+        except NoBagError:
+            pass # don't care if it doesn't exist
+    return bags
 
 
 def _get_friends(store, username):
@@ -436,3 +481,26 @@ def _get_followers(store, username):
         if username in _get_friends(store, member_name):
             followers.append(member_name)
     return followers
+
+class Serialization(HTMLSerialization):
+
+    def list_tiddlers(self, bag):
+        # XXX we should just create our own rather than riding on
+        # the core one, because this is not perfect.
+        favorite_link_html = self._make_favorite_link()
+        return favorite_link_html + HTMLSerialization.list_tiddlers(self, bag)
+
+    def _make_favorite_link(self):
+        name = self.environ['wsgiorg.routing_args'][1]['bag_name']
+        description = self.environ['tiddlyweb.store'].get(Bag(name)).desc
+        return """
+<div id="bagfavorite">
+<form action="%s/bagfavor" method="POST">
+<input type="submit" value="favorite" />
+<input type="hidden" name="bag" value="%s" />
+</form>
+</div>
+<div id="bagdescription">
+%s
+</div>
+""" % (self._server_prefix(), name, description)
