@@ -7,7 +7,7 @@ DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
 import os
 from setuptools import setup, find_packages
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 
 setup(
