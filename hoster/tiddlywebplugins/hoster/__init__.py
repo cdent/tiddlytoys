@@ -198,7 +198,7 @@ def userpage(environ, start_response):
     kept_recipes = _get_stuff(store, store.list_recipes(), user, userpage)
     kept_bags = _get_stuff(store, store.list_bags(), user, userpage)
     kept_favorites = _get_stuff(store, _get_favorited_bags(store, userpage),
-            user, userpage)
+            user)
     email = _get_email_tiddler(store, userpage)
     email_md5 = md5(email.lower()).hexdigest()
     data = {'bags': kept_bags,
@@ -319,7 +319,7 @@ def _ensure_private_recipe(store, username):
     store.put(recipe)
 
 
-def _get_stuff(store, entities, user, owner):
+def _get_stuff(store, entities, user, owner=None):
     """
     Get a sub-list of recipes or bags from the provided
     list which is readable by the given user and owned
@@ -330,12 +330,13 @@ def _get_stuff(store, entities, user, owner):
         if hasattr(entity, 'skinny'):
             entity.skinny = True
         entity = store.get(entity)
-        if entity.policy.owner == owner:
-            try:
-                entity.policy.allows(user, 'read')
-                kept_entities.append(entity)
-            except (UserRequiredError, ForbiddenError):
-                pass
+        try:
+            entity.policy.allows(user, 'read')
+            if owner and not entity.policy.owner == owner:
+                continue
+            kept_entities.append(entity)
+        except (UserRequiredError, ForbiddenError):
+            pass
     return kept_entities
 
 def _get_user_object(environ):
