@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block body %}
-<div id="profile" style="float: right; width: 50%">
-    <img
+<div id="profile">
+    <div class="gravatar"><img
     src="http://www.gravatar.com/avatar/{{ email_md5 }}.png" alt="gravatar">
+    </div>
     {{ profile }}
     {% if home == user.name %}
     <p><form action="{{ server_prefix }}/formeditor"><input type="submit"
@@ -12,10 +13,26 @@
         /></form></p>
     {% endif %}
 </div>
+<div id="friends" class="following">
+{% if home != user.name and user.name != "GUEST" and not home in user_friends %}
+<p><form action="{{ server_prefix }}/follow" method="POST">
+    <input type="submit" value="follow" />
+    <input type="hidden" name="name" value="{{ home }}" />
+</form></p>
+{% endif %}
+Following:
+<ul>
+{% for name, md5 in friends %}
+<li><a href="{{ server_prefix }}/{{ name }}" title="{{ name }}">
+    <img height="24" src="http://www.gravatar.com/avatar/{{ md5 }}.png"
+    alt="{{ name }}" />{{ name }}</a></li>
+</ul>
+{% endfor %}
+</div>
 {% if home == user.name %}
 <p>Here's your stuff {{ user.pretty_name }}.</p>
 {% else %}
-<p>Here's {{ home }} stuff.</p>
+<p>Here's {{ home }}'s stuff.</p>
 {% endif %}
 <h1>Recipes</h1>
 <ul>

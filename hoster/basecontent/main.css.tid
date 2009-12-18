@@ -1,5 +1,5 @@
 modifier: cdent
-created: 
+created: 20091217104146
 modified: 20091217104146
 type: text/css
 tags: 
@@ -13,6 +13,24 @@ padding: 1em;
 #header {
 border-bottom: thin solid black;
 margin-bottom: 1em;
+}
+
+#profile {
+float: right;
+width: 50%;
+padding-left: 1em;
+border-left: thin solid black;
+}
+
+#friends {
+float: right;
+width: 10%;
+}
+
+#friends ul li {
+list-style: none;
+maring-left: 0;
+text-indent: -1em;
 }
 
 #header ul li, form {

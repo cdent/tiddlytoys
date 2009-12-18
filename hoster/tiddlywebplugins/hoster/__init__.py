@@ -35,9 +35,30 @@ def init(config):
         config['selector'].add('/help', GET=help)
         config['selector'].add('/formeditor', GET=get_profiler, POST=post_profile)
         config['selector'].add('/addemail', POST=add_email)
+        config['selector'].add('/follow', POST=add_friend)
         config['selector'].add('/logout', POST=logout)
+        config['selector'].add('/members', GET=members)
         config['selector'].add('/{userpage:segment}', GET=userpage)
 
+
+@do_html()
+def members(environ, start_response):
+    store = environ['tiddlyweb.store']
+    member_names = _get_member_names(store)
+    members = []
+    for member in member_names:
+        email = _get_email_tiddler(store, member)
+        email_md5 = md5(email.lower()).hexdigest()
+        members.append((member, email_md5))
+    return _send_template(environ, 'members.html', {'members': members}) 
+
+
+def _get_member_names(store):
+    def _reify_user(username):
+        return store.get(username)
+    names = (user.usersign for user in store.list_users() if
+            'MEMBER' in _reify_user(user).list_roles())
+    return names
 
 def logout(environ, start_response):
     cookie = Cookie.SimpleCookie()
@@ -52,6 +73,25 @@ def logout(environ, start_response):
         ])
     return uri
 
+
+def add_friend(environ, start_response):
+    user = _get_user_object(environ)
+    store = environ['tiddlyweb.store']
+    _ensure_user_bag(store, user['name'])
+    new_friend = environ['tiddlyweb.query'].get('name', None)[0]
+    tiddler = Tiddler('friends', user['name'])
+    try:
+        store.get(tiddler)
+        friends = tiddler.text.splitlines()
+    except NoTiddlerError:
+        friends = []
+    if new_friend and new_friend not in friends:
+        friends.append(new_friend)
+    tiddler.text = '\n'.join(friends)
+    store.put(tiddler)
+    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
+
+
 def add_email(environ, start_response):
     user = _get_user_object(environ)
     store = environ['tiddlyweb.store']
@@ -65,17 +105,11 @@ def add_email(environ, start_response):
 
 @do_html()
 def help(environ, start_response):
-    user = _get_user_object(environ)
-    data = {}
-    data['user'] = user
-    return _send_template(environ, 'help.html', data) 
+    return _send_template(environ, 'help.html') 
 
 @do_html()
 def front(environ, start_response):
-    user = _get_user_object(environ)
-    data = {}
-    data['user'] = user
-    return _send_template(environ, 'home.html', data)
+    return _send_template(environ, 'home.html')
 
 
 def first_time_check(environ, user):
@@ -117,6 +151,14 @@ def userpage(environ, start_response):
     if 'MEMBER' not in userpage_user.list_roles():
         raise HTTP404('%s has no page' % userpage)
 
+    user_friend_names = _get_friends(store, user['name'])
+    friend_names = _get_friends(store, userpage)
+    friends = []
+    for name in friend_names:
+        email = _get_email_tiddler(store, name)
+        email_md5 = md5(email.lower()).hexdigest()
+        friends.append((name, email_md5))
+
     profile_tiddler = _get_profile(store, user, userpage)
     profile_html = render_wikitext(profile_tiddler, environ)
     kept_recipes = _get_stuff(store, store.list_recipes(), user, userpage)
@@ -124,6 +166,8 @@ def userpage(environ, start_response):
     email = _get_email_tiddler(store, userpage)
     email_md5 = md5(email.lower()).hexdigest()
     data = {'bags': kept_bags,
+            'user_friends': user_friend_names,
+            'friends': friends,
             'recipes': kept_recipes,
             'home': userpage,
             'profile': profile_html,
@@ -132,6 +176,16 @@ def userpage(environ, start_response):
             'user': _get_user_object(environ)}
 
     return _send_template(environ, 'profile.html', data)
+
+
+def _get_friends(store, username):
+    tiddler = Tiddler('friends', username)
+    try:
+        store.get(tiddler)
+        friends = tiddler.text.splitlines()
+    except NoTiddlerError:
+        friends = []
+    return friends
 
 def _get_profile(store, user, userpage):
     try:
@@ -247,11 +301,15 @@ def _get_user_object(environ):
     return user
 
 
-def _send_template(environ, template_name, template_data):
+def _send_template(environ, template_name, template_data=None):
+    if template_data == None:
+        template_data = {}
     template = get_template(environ, template_name)
     server_prefix = environ['tiddlyweb.config']['server_prefix']
+    user = _get_user_object(environ)
     template_defaults = {
             #'message': 'test me you are a message',
+            'user': user,
             'member_role': 'MEMBER',
             'title': 'TiddlyHoster',
             'userpage': {
@@ -294,9 +352,7 @@ def get_profiler(environ, start_response):
 
     return_url = '%s/home' % server_base_url(environ)
 
-    user = _get_user_object(environ)
     data = {}
-    data['user'] = user
     data['tiddler'] = tiddler
     data['return_url'] = return_url
     return _send_template(environ, 'profile_edit.html', data)
