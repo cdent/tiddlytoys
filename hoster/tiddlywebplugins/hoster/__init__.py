@@ -15,11 +15,12 @@ from tiddlyweb.model.user import User
 from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler
-from tiddlyweb.store import NoBagError, NoTiddlerError, NoUserError
-from tiddlyweb.web.http import HTTP302, HTTP404
+from tiddlyweb.store import NoBagError, NoTiddlerError, NoUserError, NoRecipeError
+from tiddlyweb.web.http import HTTP303, HTTP404, HTTP400
 from tiddlyweb.web.util import server_base_url
 from tiddlyweb.web.wsgi import HTMLPresenter
-from tiddlywebplugins.utils import replace_handler, do_html, ensure_bag
+from tiddlywebplugins.utils import (replace_handler,
+        do_html, ensure_bag, require_role)
 from tiddlywebplugins.templates import get_template
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.hoster.instance import instance_tiddlers
@@ -47,6 +48,10 @@ def init(config):
         config['selector'].add('/logout', POST=logout)
         config['selector'].add('/members', GET=members)
         config['selector'].add('/bagfavor', POST=bag_favor)
+        config['selector'].add('/createrecipe', GET=get_createrecipe,
+                POST=post_createrecipe)
+        config['selector'].add('/createbag', GET=get_createbag,
+                POST=post_createbag)
         # THE FOLLOWING MUST COME LAST
         config['selector'].add('/{userpage:segment}', GET=userpage)
 
@@ -58,6 +63,95 @@ def init(config):
         new_serializer = ['tiddlywebplugins.hoster', 'text/html; charset=UTF-8']
         config['serializers']['text/html'] = new_serializer
         config['serializers']['default'] = new_serializer
+
+
+@do_html()
+@require_role('MEMBER')
+def get_createbag(environ, start_response):
+    return _send_template(environ, 'bag.html', {'timestamp': int(time.time())}) 
+
+
+@require_role('MEMBER')
+def post_createbag(environ, start_response):
+    user = _get_user_object(environ)
+    store = environ['tiddlyweb.store']
+    bag_name = environ['tiddlyweb.query'].get('bag', [''])[0]
+    publicity = environ['tiddlyweb.query'].get('publicity', [''])[0]
+    description = environ['tiddlyweb.query'].get('description', [''])[0]
+    if not bag_name:
+        raise HTTP400('missing data')
+
+    bag = Bag(bag_name)
+
+    try:
+        bag = store.get(bag)
+        raise HTTP400('bag exists')
+    except NoBagError:
+        pass
+    bag.policy.owner = user['name']
+    if publicity == 'private':
+        bag.policy.read = [user['name']]
+    else:
+        bag.policy.read = []
+    for constraint in ['write', 'create', 'delete', 'manage']:
+        setattr(bag.policy, constraint, [user['name']])
+    bag.desc = description
+    store.put(bag)
+
+    raise HTTP303('%s/home' % server_base_url(environ))
+
+
+@do_html()
+@require_role('MEMBER')
+def get_createrecipe(environ, start_response):
+    return _send_template(environ, 'recipe.html', {'timestamp': int(time.time())}) 
+
+@require_role('MEMBER')
+def post_createrecipe(environ, start_response):
+    user = _get_user_object(environ)
+    store = environ['tiddlyweb.store']
+    recipe_name = environ['tiddlyweb.query'].get('recipe', [''])[0]
+    bag_name = environ['tiddlyweb.query'].get('bag', [''])[0]
+    publicity = environ['tiddlyweb.query'].get('publicity', [''])[0]
+    description = environ['tiddlyweb.query'].get('description', [''])[0]
+    if not bag_name or not recipe_name:
+        raise HTTP400('missing data')
+
+    recipe = Recipe(recipe_name)
+    bag = Bag(bag_name)
+    try:
+        recipe = store.get(recipe)
+        raise HTTP400('recipe exists')
+    except NoRecipeError:
+        pass
+
+    try:
+        bag = store.get(bag)
+        try:
+            bag.policy.allows(user, 'read')
+        except (UserRequiredError, ForbiddenError):
+            raise HTTP400('bag not readable')
+    except NoBagError:
+        bag.policy.owner = user['name']
+        for constraint in ['read', 'write', 'create', 'delete', 'manage']:
+            setattr(bag.policy, constraint, [user['name']])
+        store.put(bag)
+
+    if publicity == 'private':
+        recipe.policy.read = [user['name']]
+    else:
+        recipe.policy.read = []
+    recipe.policy.manage = [user['name']]
+    recipe.policy.owner = user['name']
+    recipe.desc = description
+    recipe.set_recipe([
+        ('system', ''),
+        (bag.name, ''),
+        ])
+    store.put(recipe)
+
+    raise HTTP303('%s/home' % server_base_url(environ))
+
 
 @do_html()
 def members(environ, start_response):
@@ -96,7 +190,7 @@ def bag_favor(environ, start_response):
     user = _get_user_object(environ)
     store = environ['tiddlyweb.store']
     _ensure_user_bag(store, user['name'])
-    new_favorite = environ['tiddlyweb.query'].get('bag', None)[0]
+    new_favorite = environ['tiddlyweb.query'].get('bag', [''])[0]
     tiddler = Tiddler('favorites', user['name'])
     try:
         store.get(tiddler)
@@ -108,14 +202,14 @@ def bag_favor(environ, start_response):
         favorites.append(new_favorite)
     tiddler.text = '\n'.join(favorites)
     store.put(tiddler)
-    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
+    raise HTTP303('%s/home' % server_base_url(environ))
 
 
 def add_friend(environ, start_response):
     user = _get_user_object(environ)
     store = environ['tiddlyweb.store']
     _ensure_user_bag(store, user['name'])
-    new_friend = environ['tiddlyweb.query'].get('name', None)[0]
+    new_friend = environ['tiddlyweb.query'].get('name', [''])[0]
     tiddler = Tiddler('friends', user['name'])
     try:
         store.get(tiddler)
@@ -126,7 +220,7 @@ def add_friend(environ, start_response):
         friends.append(new_friend)
     tiddler.text = '\n'.join(friends)
     store.put(tiddler)
-    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
+    raise HTTP303('%s/home' % server_base_url(environ))
 
 
 def add_email(environ, start_response):
@@ -137,7 +231,7 @@ def add_email(environ, start_response):
     email = environ['tiddlyweb.query'].get('email', [''])[0]
     tiddler.text = email
     store.put(tiddler)
-    raise HTTP302('%s/%s' % (server_base_url(environ), user['name']))
+    raise HTTP303('%s/home' % server_base_url(environ))
 
 
 @do_html()
@@ -435,7 +529,7 @@ def post_profile(environ, start_response):
 
     store.put(tiddler)
 
-    raise HTTP302(return_url)
+    raise HTTP303(return_url)
 
 
 class PrettyPresenter(HTMLPresenter):
