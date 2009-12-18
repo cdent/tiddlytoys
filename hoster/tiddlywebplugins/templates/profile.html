@@ -35,15 +35,31 @@ Following:
 <p>Here's {{ home }}'s stuff.</p>
 {% endif %}
 <h1>Wikis</h1>
+{% if home == user.name %}
+<h3><a href="{{ server_prefix }}/createrecipe">✚</a></h3>
+{% endif %}
 <ul>
 {% for recipe in recipes %}
-<li><a href="{{ server_prefix }}/recipes/{{ recipe.name }}/tiddlers.wiki">{{ recipe.name }}</a></li>
+<li><a href="{{ server_prefix }}/recipes/{{ recipe.name }}/tiddlers.wiki">{{ recipe.name }}</a>
+<a href="{{ server_prefix }}/recipes/{{ recipe.name }}/tiddlers.atom"
+    title="feed"><img
+    src="http://www.mozilla.org/images/feed-icon-14x14.png"
+    alt="feed" /></a></li>
 {% endfor %}
 </ul>
 <h1>Bags</h1>
+{% if home == user.name %}
+<h3><a href="{{ server_prefix }}/createbag">✚</a>
+    <a href="{{ server_prefix }}/import">➥</a></h3>
+{% endif %}
 <ul>
 {% for bag in bags %}
-<li><a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers">{{ bag.name }}</a></li>
+<li><a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers">{{ bag.name }}</a>
+<a href="{{ server_prefix }}/bags/{{ bag.name }}/tiddlers.atom"
+    title="feed"><img
+    src="http://www.mozilla.org/images/feed-icon-14x14.png"
+    alt="feed" /></a></li>
+</li>
 {% endfor %}
 </ul>
 {% endblock %}

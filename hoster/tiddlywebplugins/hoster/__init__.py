@@ -22,6 +22,7 @@ from tiddlyweb.web.wsgi import HTMLPresenter
 from tiddlywebplugins.utils import replace_handler, do_html, ensure_bag
 from tiddlywebplugins.templates import get_template
 from tiddlyweb.wikitext import render_wikitext
+from tiddlywebplugins.hoster.instance import instance_tiddlers
 
 
 def init(config):
@@ -31,6 +32,9 @@ def init(config):
     tiddlywebwiki.init(config)
     tiddlywebplugins.register.init(config)
     tiddlywebplugins.wimporter.init(config)
+    
+    # XXX this clobbers?
+    config['instance_tiddlers'] = instance_tiddlers
 
     if config['selector']:
         replace_handler(config['selector'], '/', dict(GET=front))
@@ -388,7 +392,6 @@ def post_profile(environ, start_response):
 class PrettyPresenter(HTMLPresenter):
 
     def __call__(self, environ, start_response):
-        print 'pretty presenter in the house!'
         output = self.application(environ, start_response)
         if self._needs_title(environ):
             output = ''.join(output)
