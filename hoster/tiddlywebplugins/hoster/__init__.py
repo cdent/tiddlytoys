@@ -44,7 +44,7 @@ def init(config):
 @do_html()
 def members(environ, start_response):
     store = environ['tiddlyweb.store']
-    member_names = _get_member_names(store)
+    member_names = sorted(_get_member_names(store))
     members = []
     for member in member_names:
         email = _get_email_tiddler(store, member)
@@ -119,9 +119,9 @@ def first_time_check(environ, user):
         bag = Bag(username)
         store.get(bag)
     except NoBagError:
-        _ensure_protected_bag(store, username)
+        _ensure_public_bag(store, username)
         _ensure_private_bag(store, username)
-        _ensure_protected_recipe(store, username)
+        _ensure_public_recipe(store, username)
         _ensure_private_recipe(store, username)
         _ensure_user_bag(store, username)
 
@@ -135,9 +135,6 @@ def userpage(environ, start_response):
 
     if userpage == 'home':
         userpage = user['name']
-    if userpage == 'GUEST' or 'MEMBER' not in user['roles']:
-        location = '%s/' % server_base_url(environ)
-        raise HTTP302(location)
 
     store = environ['tiddlyweb.store']
 
@@ -221,13 +218,13 @@ def _ensure_user_bag(store, userpage):
     ensure_bag(userpage, store, policy)
 
 
-def _ensure_protected_bag(store, username):
+def _ensure_public_bag(store, username):
     policy = {}
-    policy['read'] = ['R:MEMBER']
+    policy['read'] = []
     for constraint in ['write', 'create', 'delete', 'manage']:
         policy[constraint] = [username]
     policy['owner'] = username
-    ensure_bag('%s-protected' % username, store, policy)
+    ensure_bag('%s-public' % username, store, policy)
 
 
 def _ensure_private_bag(store, username):
@@ -238,10 +235,10 @@ def _ensure_private_bag(store, username):
     ensure_bag('%s-private' % username, store, policy)
 
 
-def _ensure_protected_recipe(store, username):
-    name = '%s-protected' % username
+def _ensure_public_recipe(store, username):
+    name = '%s-public' % username
     recipe = Recipe(name)
-    recipe.policy.read = ['R:MEMBER']
+    recipe.policy.read = []
     recipe.policy.manage = [username]
     recipe.policy.owner = username
     recipe.set_recipe([
@@ -253,7 +250,7 @@ def _ensure_protected_recipe(store, username):
 
 def _ensure_private_recipe(store, username):
     name = '%s-private' % username
-    pname = '%s-protected' % username
+    pname = '%s-public' % username
     recipe = Recipe(name)
     recipe.policy.read = [username]
     recipe.policy.manage = [username]
