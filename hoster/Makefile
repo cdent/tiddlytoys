@@ -33,3 +33,4 @@ devlinks:
 
 cleanlinks:
 	rm logout.py twedit.py templates || true
+	find tiddlywebplugins -type l |xargs rm ||true
