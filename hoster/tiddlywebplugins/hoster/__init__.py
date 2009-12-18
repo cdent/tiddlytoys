@@ -18,6 +18,7 @@ from tiddlyweb.model.tiddler import Tiddler
 from tiddlyweb.store import NoBagError, NoTiddlerError, NoUserError
 from tiddlyweb.web.http import HTTP302, HTTP404
 from tiddlyweb.web.util import server_base_url
+from tiddlyweb.web.wsgi import HTMLPresenter
 from tiddlywebplugins.utils import replace_handler, do_html, ensure_bag
 from tiddlywebplugins.templates import get_template
 from tiddlyweb.wikitext import render_wikitext
@@ -40,6 +41,8 @@ def init(config):
         config['selector'].add('/logout', POST=logout)
         config['selector'].add('/members', GET=members)
         config['selector'].add('/{userpage:segment}', GET=userpage)
+        presenter_index = config['server_response_filters'].index(HTMLPresenter)
+        config['server_response_filters'][presenter_index] = PrettyPresenter
 
 
 @do_html()
@@ -380,3 +383,18 @@ def post_profile(environ, start_response):
     store.put(tiddler)
 
     raise HTTP302(return_url)
+
+
+class PrettyPresenter(HTMLPresenter):
+
+    def __call__(self, environ, start_response):
+        print 'pretty presenter in the house!'
+        output = self.application(environ, start_response)
+        if self._needs_title(environ):
+            output = ''.join(output)
+            data = {
+                    'output': output,
+                    'title': environ['tiddlyweb.title'],
+                    }
+            return _send_template(environ, 'pretty.html', data)
+        return output
