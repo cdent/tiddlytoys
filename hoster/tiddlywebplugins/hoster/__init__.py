@@ -23,6 +23,7 @@ from tiddlywebplugins.utils import replace_handler, do_html, ensure_bag
 from tiddlywebplugins.templates import get_template
 from tiddlyweb.wikitext import render_wikitext
 from tiddlywebplugins.hoster.instance import instance_tiddlers
+from tiddlyweb.web.extractors.simple_cookie import Extractor as SimpleExtractor
 
 
 def init(config):
@@ -47,6 +48,8 @@ def init(config):
         config['selector'].add('/{userpage:segment}', GET=userpage)
         presenter_index = config['server_response_filters'].index(HTMLPresenter)
         config['server_response_filters'][presenter_index] = PrettyPresenter
+        simple_cookie_index = config['extractors'].index('simple_cookie')
+        config['extractors'][simple_cookie_index] = 'tiddlywebplugins.hoster'
 
 
 @do_html()
@@ -401,3 +404,35 @@ class PrettyPresenter(HTMLPresenter):
                     }
             return _send_template(environ, 'pretty.html', data)
         return output
+
+class Extractor(SimpleExtractor):
+
+    def extract(self, environ, start_response):
+        results = SimpleExtractor.extract(self, environ, start_response)
+        if results:
+            store = environ['tiddlyweb.store']
+            user_dict = results
+            username = user_dict['name']
+            users_friends = _get_friends(store, username)
+            friended_user = _get_followers(store, username)
+
+            for friend in users_friends:
+                user_dict['roles'].append('%s-is-friend' % friend)
+            for friend in friended_user:
+                user_dict['roles'].append('friend-of-%s' % friend)
+
+            return user_dict
+        return results
+
+def _get_followers(store, username):
+    """
+    Get all the users who have username as a friend.
+    """
+    member_names = _get_member_names(store)
+    followers = []
+    for member_name in member_names:
+        if member_name == username:
+            continue
+        if username in _get_friends(store, member_name):
+            followers.append(member_name)
+    return followers
