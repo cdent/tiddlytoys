@@ -149,7 +149,7 @@ def userpage(environ, start_response):
         raise HTTP404('%s has no page' % userpage)
 
     user_friend_names = _get_friends(store, user['name'])
-    friend_names = _get_friends(store, userpage)
+    friend_names = sorted(_get_friends(store, userpage))
     friends = []
     for name in friend_names:
         email = _get_email_tiddler(store, name)
