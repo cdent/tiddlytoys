@@ -15,7 +15,7 @@
     <body>
         <div>
         {% block header %}
-            <div id='header'>
+            <div id='header' class="wide">
                 <ul>
                     <li>User: <a
                         href="{{ userpage.link }}">{{ user.pretty_name }}</a></li>
@@ -38,10 +38,18 @@
         {% block body %}
         {% endblock %}
         </div>
-        <div id='footer'>
+        <div id='footer' class="wide">
         {% block footer %}
-            If we were clever we'd put some kind of footer here. But for
-            now...
+            <ul>
+                <li><a href="http://peermore.com/"><img
+                    src="http://peermore.com/images/peermore100.png"
+                    alt="peermore"></a></li>
+                <li><a href="http://www.osmosoft.com/"><img
+                    src="http://www.osmosoft.com/images/logo.png"
+                    width="100"
+                    alt="osmosoft"></a></li>
+                <li>Hi I'm Part of the Footer</li>
+            </ul>
         {% endblock %}
         </div>
     </body>

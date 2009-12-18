@@ -27,12 +27,21 @@ float: right;
 width: 10%;
 }
 
+a img {
+    border: none;
+}
+
 #friends ul li {
 list-style: none;
 text-indent: -2em;
 }
 
-#header ul li, form {
+#friends a {
+text-decoration: none;
+}
+
+.wide ul li, form {
+vertical-align: top;
 margin-left: 0;
 padding-left: 0;
 padding-right: 2em;
