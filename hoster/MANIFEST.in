@@ -1,4 +1,0 @@
-recursive-include test *
-include README
-include tiddlywebplugins/templates/*.html
-recursive-include tiddlywebplugins/hoster/resources *
