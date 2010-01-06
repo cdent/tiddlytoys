@@ -1,0 +1,5 @@
+#!/bin/bash
+
+(cd ~/tiddlywebs/timer && \
+    twanager weight "$*")
+
