@@ -1,0 +1,14 @@
+<div id="content">
+    {% if tweets %}
+        <ul>
+        {% for tweet in tweets %}
+        <li>{{ tweet.text }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+    <p>We're going to do some open auth to go get your tweets.</p>
+    <form action="" method="POST">
+        <input type="submit" name="make" value="make a bag for my tweets"/>
+    </form>
+    {% endif %}
+</div>
