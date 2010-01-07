@@ -6,9 +6,9 @@
         {% endfor %}
         </ul>
     {% else %}
-    <p>We're going to do some open auth to go get your tweets.</p>
     <form action="" method="POST">
-        <input type="submit" name="make" value="make a bag for my tweets"/>
+        <input type="submit" name="make" value="make me able to get tweets"/>
+        <input name="service" value="twitter" type="hidden" />
     </form>
     {% endif %}
 </div>
