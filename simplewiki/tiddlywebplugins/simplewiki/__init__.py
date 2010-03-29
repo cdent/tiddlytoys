@@ -25,6 +25,7 @@ from tiddlywebplugins.templates import get_template
 from tiddlyweb import control
 
 from tiddlyweb.model.bag import Bag
+from tiddlyweb.model.collections import Tiddlers
 from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler, current_timestring
 from tiddlyweb.model.policy import ForbiddenError, UserRequiredError
@@ -70,9 +71,11 @@ def recent_changes(tiddler, environ):
     store = environ['tiddlyweb.store']
     recipe = _get_recipe(environ)
     recipe = store.get(Recipe(recipe))
-    tmpbag = Bag('tmpbag', tmpbag=True)
-    tmpbag.add_tiddlers(control.get_tiddlers_from_recipe(recipe, environ))
-    tiddlers = control.filter_tiddlers_from_bag(tmpbag, 'sort=-modified;limit=30')
+    tmpbag = Bag('tmpbag')
+    tiddlers = Tiddlers()
+    for tiddler in control.get_tiddlers_from_recipe(recipe, environ):
+        tiddlers.add(tiddler)
+    tiddlers = control.filter_tiddlers(tiddlers, 'sort=-modified;limit=30')
     template = get_template(environ, 'changes.html')
     environ['tiddlyweb.title'] = 'Recent Changes'
     return template.generate(tiddlers=tiddlers)
@@ -225,7 +228,7 @@ def _determine_tiddler(environ):
     tiddler = Tiddler(tiddler_name)
 
     try:
-        bag = control.determine_tiddler_bag_from_recipe(recipe, tiddler, environ)
+        bag = control.determine_bag_from_recipe(recipe, tiddler, environ)
         bag.policy.allows(user, 'read')
         tiddler.bag = bag.name
         tiddler = store.get(tiddler)

@@ -22,7 +22,7 @@ setup(
         packages = find_packages(exclude=['test']),
         author_email = AUTHOR_EMAIL,
         platforms = 'Posix; MacOS X; Windows',
-        install_requires = ['tiddlyweb>=0.9.79',
+        install_requires = ['tiddlyweb>=1.1.0',
             'tiddlywebplugins.templates',
             'tiddlywebplugins.instancer>=0.3.2',
             'tiddlywebplugins.utils',
