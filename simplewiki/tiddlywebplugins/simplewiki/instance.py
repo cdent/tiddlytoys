@@ -8,8 +8,8 @@ from tiddlywebplugins.instancer.util import get_tiddler_locations
 store_contents = {
         'wiki': [
             'file:basecontent/FrontPage.tid',
-            ]
-        }
+        ]
+}
 
 store_structure = {
         "bags": {
@@ -32,6 +32,7 @@ store_structure = {
 
 instance_config = {
         "system_plugins": ["tiddlywebplugins.simplewiki"],
-        }
+}
 
-instance_tiddlers = get_tiddler_locations(store_contents, 'tiddlywebplugins.simplewiki')
+instance_tiddlers = get_tiddler_locations(store_contents,
+        'tiddlywebplugins.simplewiki')

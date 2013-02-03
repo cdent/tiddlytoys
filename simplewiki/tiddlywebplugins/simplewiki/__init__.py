@@ -1,5 +1,5 @@
 """
-A simple wiki using markdown syntax, hosted at a /route 
+A simple wiki using markdown syntax, hosted at a /route
 of your choosing, defaulting to /wiki
 
 Old school wiki and web in action.
@@ -26,7 +26,6 @@ from tiddlywebplugins.templates import get_template
 
 from tiddlyweb import control
 
-from tiddlyweb.model.bag import Bag
 from tiddlyweb.model.collections import Tiddlers
 from tiddlyweb.model.recipe import Recipe
 from tiddlyweb.model.tiddler import Tiddler, current_timestring
@@ -49,12 +48,14 @@ def init(config):
     config['markdown.wiki_link_base'] = ''
 
     config['selector'].add('%s[/]' % route_base, GET=home)
-    config['selector'].add('%s/{tiddler_name:alpha}' % route_base, GET=page, POST=edit)
-    config['selector'].add('%s/{tiddler_name:alpha};editor' % route_base, GET=editor, POST=edit)
+    config['selector'].add('%s/{tiddler_name:alpha}'
+            % route_base, GET=page, POST=edit)
+    config['selector'].add('%s/{tiddler_name:alpha};editor'
+            % route_base, GET=editor, POST=edit)
 
     config['wikitext.type_render_map'].update({
-        'text/x-markdown': 'tiddlywebplugins.markdown', # replace with plugin when it exists
-        })
+        'text/x-markdown': 'tiddlywebplugins.markdown'
+    })
 
 
 def recent_changes(tiddler, environ):
@@ -63,7 +64,7 @@ def recent_changes(tiddler, environ):
     as a SPECIAL_PAGES, described below.
 
     Recent changes are simply the 30 most recently modified tiddlers
-    from the recipe. We make a list of those tiddlers and provide 
+    from the recipe. We make a list of those tiddlers and provide
     them to the changes.html template.
     """
     # XXX to be strict we should do permissions checking
@@ -71,7 +72,6 @@ def recent_changes(tiddler, environ):
     store = environ['tiddlyweb.store']
     recipe = _get_recipe(environ)
     recipe = store.get(Recipe(recipe))
-    tmpbag = Bag('tmpbag')
     tiddlers = Tiddlers()
     for tiddler in control.get_tiddlers_from_recipe(recipe, environ):
         tiddlers.add(tiddler)
@@ -137,7 +137,8 @@ def edit(environ, start_response):
         bag = control.determine_bag_for_tiddler(recipe, tiddler, environ)
         tiddler.bag = bag.name
     except NoBagError, exc:
-        raise HTTP404('No suitable bag to store tiddler %s found, %s' % (tiddler.title, exc))
+        raise HTTP404('No suitable bag to store tiddler %s found, %s'
+                % (tiddler.title, exc))
 
     bag = store.get(bag)
     try:
@@ -148,7 +149,8 @@ def edit(environ, start_response):
     except (UserRequiredError, ForbiddenError):
         challenge_url = _challenge_url(environ)
         message = """
-You do not have permission. Copy your edits, <a href="%s">login</a>, then try again.
+You do not have permission.
+Copy your edits, <a href="%s">login</a>, then try again.
 """ % challenge_url
         return _editor_display(environ, tiddler, message=message)
 
@@ -185,7 +187,7 @@ def _front_page(config):
     'simplewiki.frontpage' in configuration to change.
     """
     return config.get('simplewiki.frontpage', 'FrontPage')
-    
+
 
 def _route_base(config):
     """
@@ -207,7 +209,7 @@ def _determine_tiddler(environ):
     """
     Inspect the environment to determine which tiddler from which
     bag will provide content for the page named in the URL. If
-    the page exists, and we have permission to read the bag in 
+    the page exists, and we have permission to read the bag in
     which it is stored, the return the tiddler.
 
     If we do not have permission, a login interface will be shown.
@@ -232,7 +234,7 @@ def _determine_tiddler(environ):
         bag.policy.allows(user, 'read')
         tiddler.bag = bag.name
         tiddler = store.get(tiddler)
-    except NoBagError, exc:
+    except NoBagError:
         # Apparently the tiddler doesn't exist, let's fill in an empty one
         # then.
         tiddler.text = 'That Page does not yet exist.'
@@ -250,4 +252,4 @@ option could be AllPages.
 """
 SPECIAL_PAGES = {
         'RecentChanges': recent_changes,
-        }
+}
