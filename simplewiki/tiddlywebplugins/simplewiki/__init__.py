@@ -15,7 +15,7 @@ You can make a new simplewiki with the simplewiki script:
 instance).
 """
 
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 import urllib
 
@@ -78,7 +78,8 @@ def recent_changes(tiddler, environ):
     tiddlers = control.filter_tiddlers(tiddlers, 'sort=-modified;limit=30')
     template = get_template(environ, 'changes.html')
     environ['tiddlyweb.title'] = 'Recent Changes'
-    return template.generate(tiddlers=tiddlers)
+    return template.generate(tiddlers=(store.get(tiddler)
+        for tiddler in tiddlers))
 
 
 def home(environ, start_response):
