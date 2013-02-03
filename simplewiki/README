@@ -28,13 +28,13 @@ If you want to use simplewiki in an existing TiddlyWeb instance,
 add 'tiddlywebplugins.simplewiki' to 'system_plugins' and:
 
 * twanager bag wiki </dev/null
-* echo "/bags/wiki/tiddlers" | twanager wiki recipe
+* echo "/bags/wiki/tiddlers" | twanager recipe wiki
 * # restart your server, go to /wiki
 
 If you wish to use a different recipe (you can use whatever
 you like) set 'simplewiki.recipe' in tiddlywebconfig.py.
 
-Copyright 2009, Chris Dent <cdent@peermore.com>
+Copyright 2009, 2013: Chris Dent <cdent@peermore.com>
 
 Licensed under the same terms as TiddlyWeb itself.
 http://tiddlyweb.com/

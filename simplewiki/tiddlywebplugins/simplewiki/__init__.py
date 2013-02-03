@@ -15,9 +15,11 @@ You can make a new simplewiki with the simplewiki script:
 instance).
 """
 
-__version__ = '1.0.1'
+__version__ = '1.0.3'
 
 import urllib
+
+from httpexceptor import HTTP302, HTTP303, HTTP404
 
 from tiddlywebplugins.utils import do_html
 from tiddlywebplugins.templates import get_template
@@ -32,13 +34,11 @@ from tiddlyweb.model.policy import ForbiddenError, UserRequiredError
 
 from tiddlyweb.store import NoBagError
 
-from tiddlyweb.web.http import HTTP302, HTTP303, HTTP404
 from tiddlyweb.web.util import server_base_url
 from tiddlyweb.web.wsgi import _challenge_url
 
 from tiddlyweb.wikitext import render_wikitext
 
-__version__ = '1.0'
 
 def init(config):
     """

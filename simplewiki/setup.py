@@ -7,7 +7,7 @@ DESCRIPTION = 'A simple markdown based wiki in TiddlyWeb'
 import os
 from setuptools import setup, find_packages
 
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 
 setup(
@@ -22,7 +22,7 @@ setup(
         packages = find_packages(exclude=['test']),
         author_email = AUTHOR_EMAIL,
         platforms = 'Posix; MacOS X; Windows',
-        install_requires = ['tiddlyweb>=1.1.0',
+        install_requires = ['tiddlyweb>=1.4.2',
             'tiddlywebplugins.templates',
             'tiddlywebplugins.instancer>=0.3.2',
             'tiddlywebplugins.utils',

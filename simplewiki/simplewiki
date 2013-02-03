@@ -12,14 +12,14 @@ sys.path.insert(0, cwd)
 
 from tiddlyweb.config import config
 from tiddlywebplugins.instancer.util import spawn
-from tiddlywebplugins.simplewiki import instance
+from tiddlywebplugins.simplewiki import instance as instance_module
 
 
 def main(args):
     args = [unicode(arg, "UTF-8") for arg in args]
     instance_path = args[1]
-    config['instance_tiddlers'] = instance.instance_tiddlers
-    instance.spawn(instance_path, config, instance)
+    config['instance_tiddlers'] = instance_module.instance_tiddlers
+    spawn(instance_path, config, instance_module)
     return True
 
 
